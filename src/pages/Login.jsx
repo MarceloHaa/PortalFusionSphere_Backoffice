@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { authService } from "../services/api";
-import { toast, ToastContainer } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { PiEyeBold, PiEyeClosedBold } from "react-icons/pi";
+import logo from "../assets/logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -28,7 +31,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const result = await authService.login(formData);
+      const result = await login(formData);
 
       if (result.requiresTwoFactor) {
         setShowTwoFactor(true);
@@ -53,7 +56,10 @@ const Login = () => {
     <div className="flex items-center justify-center min-h-screen bg-accent p-4">
       <div className="w-full max-w-md bg-secondary rounded-xl shadow-lg overflow-hidden">
         <div className="bg-primary p-6 text-center">
-          <h1 className="text-2xl font-bold text-light">FusionSphere</h1>
+          <div className="flex items-center justify-center space-x-2">
+            <img src={logo} alt="FusionSphere Logo" className="h-16 w-auto" />
+            <h1 className="text-2xl font-bold text-light">FusionSphere</h1>
+          </div>
         </div>
 
         <div className="p-8">
