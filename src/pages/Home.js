@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import logo_01 from "../assets/logo_01.png";
 import logo from "../assets/logo.png";
 import { PiGear, PiHouse, PiSignOut, PiUser } from "react-icons/pi";
-import { TbArrowBigLeftLines } from "react-icons/tb";
+import { TbArrowBigLeftLines, TbArrowBigRightLines } from "react-icons/tb";
 import { FaRegPenToSquare } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 function SidebarItem({ icon, text, active = false, expanded }) {
   return (
@@ -22,19 +23,35 @@ function SidebarItem({ icon, text, active = false, expanded }) {
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const [userName, setUserName] = useState("");
+  const { user, logout: authLogout } = useAuth();
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (user && user.token) {
+        try {
+          const storedUserName = localStorage.getItem("userName");
+          if (storedUserName) {
+            setUserName(storedUserName);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar dados do usuário:", error);
+        }
+      } else {
+        setUserName("");
+      }
+    };
+
+    fetchUserName();
+  }, [user]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
   const handleLogout = async () => {
-    try {
-      localStorage.removeItem("token");
-      localStorage.removeItem("email");
-      navigate("/login");
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-    }
+    authLogout();
+    navigate("/login");
   };
 
   return (
@@ -58,8 +75,12 @@ export default function Home() {
                 </h1>
               </div>
             ) : (
-              <div className="flex">
-                <img src={logo_01} alt="FusionSphere Logo" className="h-24 " />
+              <div className="flex items-center justify-center">
+                <img
+                  src={logo_01}
+                  alt="FusionSphere Logo"
+                  className="h-24 w-12 object-contain"
+                />
               </div>
             )}
           </div>
@@ -90,16 +111,16 @@ export default function Home() {
           </div>
           <div className="p-4">
             <button
-              className="w-full text-light flex items-end"
+              className={`flex w-full ${
+                sidebarOpen ? "justify-end" : "justify-center"
+              } text-light`}
               onClick={toggleSidebar}
+              aria-label={sidebarOpen ? "Recolher sidebar" : "Expandir sidebar"}
             >
               {sidebarOpen ? (
-                <div className="`flex items-end ">
-                  {" "}
-                  <TbArrowBigLeftLines size={24} className="text-accent " />
-                </div>
+                <TbArrowBigLeftLines size={24} className="text-accent" />
               ) : (
-                ""
+                <TbArrowBigRightLines size={24} className="text-accent" />
               )}
             </button>
           </div>
@@ -128,7 +149,12 @@ export default function Home() {
               <h1 className="text-xl font-semibold text-light">Home</h1>
             </div>
             <div className="flex items-center">
-              <div className="text-light mr-4">Olá, </div>
+              <div className="text-light mr-4">
+                Olá,
+                <span className="font-medium">
+                  {userName || "Visitante"}
+                </span>{" "}
+              </div>
               <button className="p-2 rounded-full hover:bg-tertiary text-light">
                 <PiSignOut onClick={handleLogout} size={24} />
               </button>
