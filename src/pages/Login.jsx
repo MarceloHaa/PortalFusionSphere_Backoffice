@@ -30,20 +30,13 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const result = await login(formData);
 
-      if (result.requiresTwoFactor) {
-        setShowTwoFactor(true);
-        toast.info("Verificação em duas etapas necessária");
-      } else {
-        toast.success("Login realizado com sucesso!");
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1500);
-      }
-    } catch (err) {
-      toast.error(err.message || "Falha na autenticação");
+    try {
+      await login(formData);
+      toast.success("Login realizado com sucesso!");
+      navigate("/home");
+    } catch (error) {
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }

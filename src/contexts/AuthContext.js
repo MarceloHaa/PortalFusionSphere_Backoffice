@@ -8,22 +8,46 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (token) {
-      setUser({ token });
+    const userData = localStorage.getItem("userData");
+
+    if (token && userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser({
+          token,
+          ...parsedUser,
+        });
+      } catch (error) {
+        console.error("Falha ao logar", error);
+
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userData");
+      }
     }
   }, []);
 
   const login = async (credentials) => {
-    const result = await authService.login(credentials);
-    if (result.isSuccess && result.value) {
-      localStorage.setItem("authToken", result.value);
-      setUser({ token: result.value });
+    try {
+      const { token, user } = await authService.login(credentials);
+
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("userData", JSON.stringify(user));
+
+      setUser({
+        token,
+        ...user,
+      });
+
+      return { token, user };
+    } catch (error) {
+      console.error("Login falhou:", error);
+      throw error;
     }
-    return result;
   };
 
   const logout = () => {
-    authService.logout();
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
     setUser(null);
   };
 
@@ -35,5 +59,9 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };
