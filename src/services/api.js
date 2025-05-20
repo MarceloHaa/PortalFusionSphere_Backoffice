@@ -1,7 +1,8 @@
 import axios from "axios";
 
-const API_URL =
-  process.env.REACT_APP_API_URL || "https://portalfusionsphere.onrender.com";
+const BASE_URL =
+  process.env.REACT_APP_BASE_URL || "https://portalfusionsphere.onrender.com";
+const API_URL = `${BASE_URL}/api`;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -10,10 +11,17 @@ const api = axios.create({
   },
 });
 
+const authApi = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 export const authService = {
   register: async (userData) => {
     try {
-      const response = await api.post("/authentication/register", userData);
+      const response = await authApi.post("/Authentication/register", userData);
       return response.data;
     } catch (error) {
       throw error.response
@@ -30,7 +38,7 @@ export const authService = {
         twoFactorCode: credentials.twoFactorCode || "",
         twoFactorRecoveryCode: credentials.twoFactorRecoveryCode || "",
       };
-      const response = await api.post("authentication/login", loginData);
+      const response = await authApi.post("/Authentication/login", loginData);
 
       const data = response.data;
 
@@ -47,6 +55,7 @@ export const authService = {
       throw error;
     }
   },
+
   logout: () => {
     localStorage.removeItem("authToken");
   },
@@ -58,6 +67,19 @@ export const authService = {
 };
 
 api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+authApi.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
     if (token) {
