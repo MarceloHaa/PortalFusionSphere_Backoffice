@@ -11,9 +11,12 @@ import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import Home from "./pages/Home";
 import ProtectedRoute from "./components/ProtectedRoute";
-import TagManagement from "./pages/adimin/TagMagement";
 import Layout from "./components/Layout";
-import AdminRoute from "./components/AdimRoute";
+import AdminRoute from "./components/AdminRoute";
+import AuthorRoute from "./components/AuthorRoute";
+import Autor from "./pages/Autor";
+import TagManagement from "./pages/adimin/TagMagement";
+import UpLoadingImage from "./pages/UploadingImage";
 
 function App() {
   return (
@@ -23,14 +26,21 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
+          <Route element={<Layout />}>
+            <Route element={<ProtectedRoute />}>
               <Route path="/home" element={<Home />} />
-              <Route path="/profile" element={<div>Página de Perfil</div>} />
+            </Route>
 
-              <Route element={<AdminRoute />}>
-                <Route path="/admin/tags" element={<TagManagement />} />
-              </Route>
+            <Route element={<AuthorRoute />}>
+              <Route path="/autor" element={<Autor />} />
+            </Route>
+
+            <Route element={<AuthorRoute />}>
+              <Route path="/uploading" element={<UpLoadingImage />} />
+            </Route>
+
+            <Route element={<AdminRoute />}>
+              <Route path="/admin/tags" element={<TagManagement />} />
             </Route>
           </Route>
 

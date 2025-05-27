@@ -5,14 +5,27 @@ import { PiGear, PiHouse, PiUser } from "react-icons/pi";
 import { TbArrowBigLeftLines, TbArrowBigRightLines } from "react-icons/tb";
 import { FaRegPenToSquare } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { RiUploadCloud2Fill } from "react-icons/ri";
 
-function SidebarItem({ icon, text, active = false, expanded, onClick }) {
+function SidebarItem({
+  icon,
+  text,
+  active = false,
+  expanded,
+  onClick,
+  disabled = false,
+}) {
   return (
     <div
       className={`flex items-center py-3 px-4 mb-2 rounded-md cursor-pointer ${
-        active ? "bg-tertiary" : "hover:bg-tertiary"
+        disabled
+          ? "opacity-50 cursor-not-allowed"
+          : active
+          ? "bg-tertiary"
+          : "hover:bg-tertiary"
       }`}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
     >
       <div className="text-light">{icon}</div>
       {expanded && <span className="ml-3 text-light">{text}</span>}
@@ -23,31 +36,60 @@ function SidebarItem({ icon, text, active = false, expanded, onClick }) {
 export default function Sidebar({ activePage, setActivePage }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const { user, isAdmin, isAuthor, isAuthenticated } = useAuth();
+
+  console.log("📋 Sidebar - Dados recebidos:", {
+    user,
+    isAdmin,
+    isAuthor,
+    isAuthenticated,
+    userIsAdmin: user?.isAdmin,
+    userIsAuthor: user?.isAuthor,
+  });
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
   const handleNavigation = (page) => {
+    if (!isAuthenticated) return;
+
     setActivePage(page);
 
     switch (page) {
       case "home":
-        navigate("/dashboard");
+        navigate("/home");
         break;
       case "perfil":
-        navigate("/profile");
+        navigate("/home");
         break;
       case "autor":
-        navigate("/author");
+        navigate("/autor");
+        break;
+      case "uploading":
+        if (isAuthor || isAdmin) {
+          navigate("/uploading");
+        } else {
+          alert("Você não tem permissão de autor para acessar esta página.");
+        }
         break;
       case "admin":
-        navigate("/admin/tags");
+        if (isAdmin) {
+          navigate("/admin/tags");
+        } else {
+          alert(
+            "Você não tem permissão de administrador para acessar esta página."
+          );
+        }
         break;
       default:
-        navigate("/dashboard");
+        navigate("/home");
     }
   };
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div
@@ -72,6 +114,15 @@ export default function Sidebar({ activePage, setActivePage }) {
             </div>
           )}
         </div>
+
+        {sidebarOpen && user && (
+          <div className="px-4 py-2 border-b border-tertiary/20">
+            <p className="text-sm text-light/80">
+              Olá, {user.name || user.email}
+            </p>
+          </div>
+        )}
+
         <div className="flex-1 mt-6">
           <nav className="px-2">
             <SidebarItem
@@ -81,6 +132,7 @@ export default function Sidebar({ activePage, setActivePage }) {
               expanded={sidebarOpen}
               onClick={() => handleNavigation("home")}
             />
+
             <SidebarItem
               icon={<PiUser size={24} />}
               text="Perfil"
@@ -93,17 +145,31 @@ export default function Sidebar({ activePage, setActivePage }) {
               text="Autor"
               active={activePage === "autor"}
               expanded={sidebarOpen}
-              onClick={() => handleNavigation("autor")}
+              onClick={() => handleNavigation("perfil")}
             />
-            <SidebarItem
-              icon={<PiGear size={24} />}
-              text="Adiministrador"
-              active={activePage === "admin"}
-              expanded={sidebarOpen}
-              onClick={() => handleNavigation("admin")}
-            />
+
+            {(isAuthor || isAdmin) && (
+              <SidebarItem
+                icon={<RiUploadCloud2Fill size={24} />}
+                text="Uploading"
+                active={activePage === "uploadind"}
+                expanded={sidebarOpen}
+                onClick={() => handleNavigation("uploading")}
+              />
+            )}
+
+            {isAdmin && (
+              <SidebarItem
+                icon={<PiGear size={24} />}
+                text="Administrador"
+                active={activePage === "admin"}
+                expanded={sidebarOpen}
+                onClick={() => handleNavigation("admin")}
+              />
+            )}
           </nav>
         </div>
+
         <div className="p-4">
           <button
             className={`flex w-full ${
